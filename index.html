@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dzita CHPS AI Assistant</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green-50: #EAF3DE;
+    --green-100: #C0DD97;
+    --green-400: #639922;
+    --green-600: #3B6D11;
+    --green-800: #27500A;
+    --gold-400: #BA7517;
+    --surface-bg: #f5f7f4;
+    --surface-card: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5a6652;
+    --text-muted: #8a9a80;
+    --border: #d4dfd0;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--surface-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--green-800) 0%, var(--green-600) 60%, var(--green-400) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(39,80,10,0.18);
+  }
+
+  .header-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-circle svg { width: 26px; height: 26px; }
+  .header-text { flex: 1; }
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.72);
+    margin-top: 2px;
+  }
+
+  .status-pill {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #7ddd5a;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .topics-bar {
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .topics-bar::-webkit-scrollbar { display: none; }
+
+  .topics-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .topic-chip {
+    background: var(--green-50);
+    border: 1px solid #b8d89a;
+    border-radius: 20px;
+    padding: 5px 13px;
+    font-size: 12px;
+    color: var(--green-800);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .topic-chip:hover {
+    background: var(--green-100);
+    border-color: var(--green-400);
+  }
+
+  .main {
+    flex: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chat-window {
+    flex: 1;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    max-height: calc(100vh - 220px);
+  }
+
+  .welcome-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+
+  .welcome-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--green-50);
+    border: 2px solid #b8d89a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+  }
+
+  .welcome-icon svg { width: 28px; height: 28px; }
+
+  .welcome-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .welcome-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 440px;
+    margin: 0 auto 18px;
+  }
+
+  .welcome-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    justify-content: center;
+  }
+
+  .welcome-tag {
+    background: var(--green-50);
+    border: 1px solid #b8d89a;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--green-800);
+  }
+
+  .message {
+    display: flex;
+    gap: 10px;
+    animation: fadeUp 0.2s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .avatar.bot { background: var(--green-600); color: #fff; }
+  .avatar.user-av { background: var(--gold-400); color: #fff; }
+
+  .bubble {
+    max-width: 72%;
+    padding: 12px 15px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .bubble.bot {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-top-left-radius: 4px;
+  }
+
+  .bubble.user {
+    background: var(--green-600);
+    color: #fff;
+    border-top-right-radius: 4px;
+  }
+
+  .bubble p { margin-bottom: 8px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble ul, .bubble ol { padding-left: 18px; margin: 6px 0; }
+  .bubble li { margin-bottom: 4px; }
+  .bubble strong { font-weight: 600; }
+  .bubble h3 { font-size: 14px; font-weight: 600; margin: 10px 0 4px; color: var(--green-800); }
+
+  .typing-bubble {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 14px 16px;
+  }
+
+  .typing-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  .disclaimer {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 4px;
+    padding-bottom: 6px;
+  }
+
+  .input-area {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
+
+  .input-area textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: transparent;
+    max-height: 120px;
+    min-height: 24px;
+  }
+
+  .input-area textarea::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--green-600);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: var(--green-800); }
+  .send-btn:disabled { background: var(--border); cursor: not-allowed; }
+  .send-btn svg { width: 18px; height: 18px; fill: #fff; }
+
+  .footer-credit {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 6px 0 16px;
+  }
+
+  .footer-credit span { color: var(--green-600); font-weight: 500; }
+
+  .source-tag {
+    display: inline-block;
+    background: var(--green-50);
+    border: 1px solid #b8d89a;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--green-800);
+    margin-top: 8px;
+    margin-right: 4px;
+  }
+
+  @media (max-width: 600px) {
+    .bubble { max-width: 85%; }
+    .header-title { font-size: 15px; }
+    .status-pill { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo-circle">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="white"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <div class="header-title">Dzita CHPS AI Assistant</div>
+      <div class="header-sub">Ghana Health Service · CHPS Guidelines & Manuals</div>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      Online
+    </div>
+  </div>
+</div>
+
+<div class="topics-bar">
+  <div class="topics-inner">
+    <button class="topic-chip" onclick="sendTopic('What are the core functions of a CHPS compound?')">🏥 CHPS Functions</button>
+    <button class="topic-chip" onclick="sendTopic('What vaccines are included in the Ghana Expanded Programme on Immunization (EPI)?')">💉 Immunization (EPI)</button>
+    <button class="topic-chip" onclick="sendTopic('How should antenatal care be managed at the CHPS level?')">🤰 Antenatal Care</button>
+    <button class="topic-chip" onclick="sendTopic('What are the malaria treatment protocols for children under 5 per GHS guidelines?')">🦟 Malaria Treatment</button>
+    <button class="topic-chip" onclick="sendTopic('How is community-based nutrition promotion carried out by CHPS?')">🥗 Nutrition</button>
+    <button class="topic-chip" onclick="sendTopic('What are the referral guidelines from CHPS to health centers?')">🚑 Referral Guidelines</button>
+    <button class="topic-chip" onclick="sendTopic('How should Community Health Officers manage diarrhea in children?')">💧 Diarrhea Management</button>
+    <button class="topic-chip" onclick="sendTopic('What records and registers must a CHPS compound maintain?')">📋 Records & Registers</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="chat-window" id="chatWindow">
+    <div class="welcome-card" id="welcomeCard">
+      <div class="welcome-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z" fill="#3B6D11"/>
+        </svg>
+      </div>
+      <div class="welcome-title">Welcome to Dzita CHPS AI Assistant</div>
+      <div class="welcome-desc">
+        Ask me anything about Ghana Health Service clinical guidelines, CHPS operational manuals, community health protocols, and standard treatment procedures for Community Health Officers.
+      </div>
+      <div class="welcome-tags">
+        <span class="welcome-tag">📘 GHS Guidelines</span>
+        <span class="welcome-tag">📗 CHPS Manuals</span>
+        <span class="welcome-tag">🩺 Clinical Protocols</span>
+        <span class="welcome-tag">👶 MCH</span>
+        <span class="welcome-tag">🌿 Community Health</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ For professional reference only. Always follow current GHS directives and consult a supervisor for complex clinical decisions.
+  </div>
+
+  <div class="input-area">
+    <textarea id="msgInput" placeholder="Ask about GHS guidelines, CHPS protocols, treatment procedures…" rows="1"
+      onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+
+  <div class="footer-credit">
+    Developed by <span>Francis Normanyo · Kaizen Technologies</span> &nbsp;·&nbsp; Powered by AI · Ghana Health Service Knowledge Base
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are Dzita CHPS AI Assistant, an expert medical and public health assistant specialized in Ghana Health Service (GHS) guidelines, CHPS (Community-based Health Planning and Services) operational manuals, and community health protocols in Ghana.
+
+Your knowledge base covers:
+- Ghana Health Service Standard Treatment Guidelines (STG)
+- CHPS operational guidelines and compound management
+- Expanded Programme on Immunization (EPI) schedules and protocols
+- Community Health Officer (CHO) roles and responsibilities
+- Maternal and Child Health (MCH) protocols including ANC, PNC, delivery
+- Malaria case management (ACT protocols, RDT use, severe malaria referral)
+- Integrated Management of Childhood Illness (IMCI) guidelines
+- Community-based nutrition programs and MUAC screening
+- Diarrhea management (ORS, zinc supplementation)
+- Referral pathways from CHPS to health centers and district hospitals
+- Health education and community mobilization strategies
+- Record keeping (registers, report forms, community health records)
+- Water, sanitation and hygiene (WASH) promotion
+- Family planning methods available at CHPS level
+- HIV/AIDS counseling and testing referral
+- Tuberculosis (TB) case finding and DOTS support
+- Environmental health and disease surveillance
+
+Response guidelines:
+- Be clear, practical, and clinically accurate
+- Structure complex answers with headers and bullet points
+- Always cite which GHS guideline, STG edition, or CHPS manual the information comes from
+- For emergency or critical conditions, always emphasize referral urgency
+- Use simple language appropriate for community health workers
+- Remind users this is for professional reference and complex decisions need supervisor consultation`;
+
+let messages = [];
+let isLoading = false;
+
+const chatWindow = document.getElementById('chatWindow');
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
+
+msgInput.addEventListener('input', () => {
+  sendBtn.disabled = msgInput.value.trim() === '' || isLoading;
+});
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!sendBtn.disabled) sendMessage();
+  }
+}
+
+function sendTopic(text) {
+  msgInput.value = text;
+  autoGrow(msgInput);
+  sendBtn.disabled = false;
+  sendMessage();
+}
+
+function addMessage(role, html) {
+  const wc = document.getElementById('welcomeCard');
+  if (wc) wc.remove();
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message ' + (role === 'user' ? 'user' : '');
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ' + (role === 'user' ? 'user-av' : 'bot');
+  avatar.textContent = role === 'user' ? 'You' : 'DZ';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (role === 'user' ? 'user' : 'bot');
+  bubble.innerHTML = html;
+
+  wrapper.appendChild(avatar);
+  wrapper.appendChild(bubble);
+  chatWindow.appendChild(wrapper);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function showTyping() {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message';
+  wrapper.id = 'typingIndicator';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'DZ';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble bot typing-bubble';
+  bubble.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+  wrapper.appendChild(avatar);
+  wrapper.appendChild(bubble);
+  chatWindow.appendChild(wrapper);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function formatResponse(text) {
+  text = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^# (.*$)/gm, '<h3>$1</h3>');
+
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+  let listType = 'ul';
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) {
+      if (inList) { html += '</' + listType + '>'; inList = false; }
+      continue;
+    }
+    if (line.match(/^[-•]\s/)) {
+      if (!inList) { html += '<ul>'; inList = true; listType = 'ul'; }
+      html += '<li>' + line.replace(/^[-•]\s/, '') + '</li>';
+    } else if (line.match(/^\d+\.\s/)) {
+      if (!inList) { html += '<ol>'; inList = true; listType = 'ol'; }
+      html += '<li>' + line.replace(/^\d+\.\s/, '') + '</li>';
+    } else {
+      if (inList) { html += '</' + listType + '>'; inList = false; }
+      if (line.startsWith('<h3>')) html += line;
+      else html += '<p>' + line + '</p>';
+    }
+  }
+  if (inList) html += '</' + listType + '>';
+
+  if (text.toLowerCase().includes('ghs') || text.toLowerCase().includes('chps') || text.toLowerCase().includes('guidelines') || text.toLowerCase().includes('manual')) {
+    html += '<div style="margin-top:10px"><span class="source-tag">📘 GHS Guidelines</span><span class="source-tag">📗 CHPS Manual</span></div>';
+  }
+
+  return html;
+}
+
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text || isLoading) return;
+
+  msgInput.value = '';
+  msgInput.style.height = 'auto';
+  sendBtn.disabled = true;
+  isLoading = true;
+
+  addMessage('user', text);
+  messages.push({ role: 'user', content: text });
+  showTyping();
+
+  try {
+    const response = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: SYSTEM_PROMPT,
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+    removeTyping();
+
+    const replyText = data.text || 'I could not retrieve a response. Please try again.';
+    addMessage('bot', formatResponse(replyText));
+    messages.push({ role: 'assistant', content: replyText });
+
+  } catch (err) {
+    removeTyping();
+    addMessage('bot', '<p>⚠️ Connection error. Please check your network and try again.</p>');
+    console.error(err);
+  }
+
+  isLoading = false;
+  sendBtn.disabled = msgInput.value.trim() === '';
+}
+</script>
+</body>
+</html>
