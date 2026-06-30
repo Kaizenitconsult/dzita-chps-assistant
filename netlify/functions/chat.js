@@ -44,7 +44,7 @@ exports.handler = async function(event, context) {
     };
 
     // Use Bearer token auth for AQ. style keys
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
     const response = await fetch(url, {
       method: 'POST',
