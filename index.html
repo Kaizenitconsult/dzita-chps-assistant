@@ -610,9 +610,15 @@ async function sendMessage() {
     const data = await response.json();
     removeTyping();
 
-    const replyText = data.text || 'I could not retrieve a response. Please try again.';
-    addMessage('bot', formatResponse(replyText));
-    messages.push({ role: 'assistant', content: replyText });
+    if (data.error) {
+      const errDetail = '<p>⚠️ <strong>Debug Error:</strong> ' + JSON.stringify(data.error) + '</p>' +
+        (data.details ? '<p style="font-size:11px;opacity:0.7">' + JSON.stringify(data.details).substring(0, 500) + '</p>' : '');
+      addMessage('bot', errDetail);
+    } else {
+      const replyText = data.text || 'I could not retrieve a response. Please try again.';
+      addMessage('bot', formatResponse(replyText));
+      messages.push({ role: 'assistant', content: replyText });
+    }
 
   } catch (err) {
     removeTyping();
